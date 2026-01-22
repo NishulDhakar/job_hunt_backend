@@ -1,8 +1,9 @@
-import express from 'express';
-import { uploadResume } from '../controllers/resume.controller';
-import upload from '../middleware/upload.middleware';
+import { Router } from "express";
+import upload from "../config/multer";
+import { uploadResume } from "../controllers/resume.controller";
 
-const router = express.Router();
-router.post('/upload-resume', upload.single('resume'), uploadResume);
+const router = Router();
+
+router.post("/upload-resume", upload.single("resume"), uploadResume);
 
 export default router;
