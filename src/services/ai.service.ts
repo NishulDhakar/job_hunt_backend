@@ -72,12 +72,12 @@ Return ONLY valid JSON (no markdown, no code blocks):
     const rawResult = await generateContent(prompt);
 
     try {
-        // Clean up response
+
         const jsonString = rawResult
             .replace(/```json/g, '')
             .replace(/```/g, '')
-            .replace(/^[^{]*{/, '{')  // Remove any text before first {
-            .replace(/}[^}]*$/, '}')  // Remove any text after last }
+            .replace(/^[^{]*{/, '{')  
+            .replace(/}[^}]*$/, '}')  
             .trim();
 
         const parsed = JSON.parse(jsonString);
@@ -139,7 +139,7 @@ Return ONLY valid JSON (no markdown, no code blocks):
             explanation: parsed.explanation || rawResult
         };
     } catch (e) {
-        // If parsing fails, use raw response
+
         const cleanResponse = rawResult
             .replace(/^[^a-zA-Z]+/, '')
             .replace(/```/g, '')

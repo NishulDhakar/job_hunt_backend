@@ -8,7 +8,7 @@ export const fetchJobs = async (req: Request, res: Response) => {
         const { query = "developer", location = "remote" } = req.query;
         const cacheKey = `jobs_v2:${query}:${location}`;
 
-        // Check cache first for instant response
+
         const cachedJobs = await redis.get<Job[]>(cacheKey);
 
         if (cachedJobs && Array.isArray(cachedJobs) && cachedJobs.length > 0) {
@@ -20,11 +20,11 @@ export const fetchJobs = async (req: Request, res: Response) => {
             });
         }
 
-        // Fetch fresh jobs if not cached
+
         console.log(`🔍 Fetching fresh jobs for: ${query} in ${location}`);
         const jobs = await getJobs(query as string, location as string);
 
-        // Cache for 30 minutes (1800 seconds)
+
         if (jobs && jobs.length > 0) {
             await redis.set(cacheKey, jobs, { ex: 1800 });
             console.log(`💾 Cached ${jobs.length} jobs`);

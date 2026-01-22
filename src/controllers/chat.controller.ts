@@ -10,7 +10,7 @@ export const chat = async (req: Request, res: Response) => {
             return res.status(400).json({ success: false, message: 'Message is required' });
         }
 
-        // Get current jobs for context
+
         const jobs = await getJobs();
 
         const response = await chatAssistant(jobs, message);

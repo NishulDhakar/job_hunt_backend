@@ -1,17 +1,17 @@
 import multer from 'multer';
 import { Request } from 'express';
 
-// Configure storage (temporary folder)
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/'); // Ensure this directory exists or create it
+        cb(null, 'uploads/'); 
     },
     filename: (req, file, cb) => {
         cb(null, `${Date.now()}-${file.originalname}`);
     }
 });
 
-// File filter
+
 const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     const allowedTypes = ['application/pdf', 'text/plain'];
     if (allowedTypes.includes(file.mimetype)) {
@@ -23,7 +23,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
 
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    limits: { fileSize: 5 * 1024 * 1024 }, 
     fileFilter: fileFilter
 });
 

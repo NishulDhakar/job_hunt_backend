@@ -22,10 +22,10 @@ export const applyJob = async (req: Request, res: Response) => {
         const existingApps = await redis.get<Application[]>(key);
         let applications = existingApps || [];
 
-        // Check duplicates
+
         const index = applications.findIndex(app => app.jobId === jobId);
         if (index > -1) {
-            applications[index] = { ...applications[index], ...newApp }; // update timestamp
+            applications[index] = { ...applications[index], ...newApp }; 
         } else {
             applications.push(newApp);
         }

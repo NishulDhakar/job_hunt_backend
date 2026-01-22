@@ -6,7 +6,7 @@ import { Job } from '../types';
 
 export const scoreJobs = async (req: Request, res: Response) => {
     try {
-        const { userId } = req.body;
+        const { userId, jobs: submittedJobs } = req.body;
         if (!userId) {
             return res.status(400).json({ success: false, message: 'UserId is required' });
         }
@@ -16,16 +16,22 @@ export const scoreJobs = async (req: Request, res: Response) => {
             return res.status(404).json({ success: false, message: 'Resume not found. Please upload one first.' });
         }
 
-        // Try to get jobs from different cache keys or fetch fresh ones
-        let jobs = await redis.get<Job[]>('jobs_v2:default:default');
+
+        let jobs = submittedJobs;
+
 
         if (!jobs || !Array.isArray(jobs) || jobs.length === 0) {
-            // Try alternative cache key
+
+            jobs = await redis.get<Job[]>('jobs_v2:default:default');
+        }
+
+        if (!jobs || !Array.isArray(jobs) || jobs.length === 0) {
+
             jobs = await redis.get<Job[]>('jobs:default:default');
         }
 
         if (!jobs || !Array.isArray(jobs) || jobs.length === 0) {
-            // Fetch fresh jobs if nothing in cache
+
             console.log('No cached jobs found, fetching fresh jobs...');
             jobs = await getJobs();
         }
@@ -41,7 +47,7 @@ export const scoreJobs = async (req: Request, res: Response) => {
 
         const scoredJobs: any[] = [];
 
-        // LIMIT to 5 jobs for performance (can be increased)
+
         const jobsToScore = jobs.slice(0, 5);
 
         for (const job of jobsToScore) {
@@ -53,8 +59,8 @@ export const scoreJobs = async (req: Request, res: Response) => {
             });
         }
 
-        // Save scores
-        await redis.set(`scores:${userId}`, scoredJobs, { ex: 3600 }); // Cache for 1 hour
+
+        await redis.set(`scores:${userId}`, scoredJobs, { ex: 3600 }); 
 
         res.json({ success: true, data: scoredJobs });
     } catch (error: any) {
@@ -63,7 +69,7 @@ export const scoreJobs = async (req: Request, res: Response) => {
     }
 };
 
-// Get previously scored jobs from cache
+
 export const getScoredJobs = async (req: Request, res: Response) => {
     try {
         const { userId } = req.params;
@@ -71,11 +77,11 @@ export const getScoredJobs = async (req: Request, res: Response) => {
             return res.status(400).json({ success: false, message: 'UserId is required' });
         }
 
-        // Check if resume exists
+
         const resumeText = await redis.get<string>(`resume:${userId}`);
         const hasResume = !!resumeText;
 
-        // Get scored jobs from cache
+
         const scoredJobs = await redis.get<Job[]>(`scores:${userId}`);
 
         res.json({
