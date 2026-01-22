@@ -18,7 +18,7 @@ export const scoreJobs = async (req: Request, res: Response) => {
 
         // Try to get jobs from different cache keys or fetch fresh ones
         let jobs = await redis.get<Job[]>('jobs_v2:default:default');
-        
+
         if (!jobs || !Array.isArray(jobs) || jobs.length === 0) {
             // Try alternative cache key
             jobs = await redis.get<Job[]>('jobs:default:default');
@@ -31,9 +31,9 @@ export const scoreJobs = async (req: Request, res: Response) => {
         }
 
         if (!jobs || jobs.length === 0) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'No jobs available to score. Please browse jobs first or wait for job data to load.' 
+            return res.status(400).json({
+                success: false,
+                message: 'No jobs available to score. Please browse jobs first or wait for job data to load.'
             });
         }
 
@@ -59,6 +59,35 @@ export const scoreJobs = async (req: Request, res: Response) => {
         res.json({ success: true, data: scoredJobs });
     } catch (error: any) {
         console.error('Score jobs error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Get previously scored jobs from cache
+export const getScoredJobs = async (req: Request, res: Response) => {
+    try {
+        const { userId } = req.params;
+        if (!userId) {
+            return res.status(400).json({ success: false, message: 'UserId is required' });
+        }
+
+        // Check if resume exists
+        const resumeText = await redis.get<string>(`resume:${userId}`);
+        const hasResume = !!resumeText;
+
+        // Get scored jobs from cache
+        const scoredJobs = await redis.get<Job[]>(`scores:${userId}`);
+
+        res.json({
+            success: true,
+            data: {
+                hasResume,
+                hasScored: !!scoredJobs && scoredJobs.length > 0,
+                jobs: scoredJobs || []
+            }
+        });
+    } catch (error: any) {
+        console.error('Get scored jobs error:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 };

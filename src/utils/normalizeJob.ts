@@ -31,7 +31,8 @@ const normalizeJob = (job: any): Job => {
         jobType: job.contract_time || 'Full-time',
         workMode: job.contract_type || 'Remote',
         salary: job.salary_min ? `${job.salary_min} - ${job.salary_max}` : 'Not disclosed',
-        url: job.url || job.redirect_url || '#'
+        url: job.url || job.redirect_url || '#',
+        postedAt: job.created || job.posted_at || new Date().toISOString()
     };
 };
 
