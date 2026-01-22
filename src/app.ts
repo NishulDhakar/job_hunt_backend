@@ -20,11 +20,13 @@ app.use(cors({
   origin: [
     "http://localhost:5173",          
     "http://localhost:3000",        
-    "https://jobs.nishul.dev"  
+    "https://jobs.nishul.dev",
+    "https://job-hunt-frontend-pi.vercel.app"  
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
+app.options("*", cors());
 
 app.use(morgan('dev'));
 app.use(express.json());
