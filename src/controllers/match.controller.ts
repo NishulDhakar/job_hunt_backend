@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import redis from '../services/redis.service';
 import { getMatchScore } from '../services/ai.service';
-import { getJobs } from '../services/jobApi.service';
+
+import { getJobs } from '../services/joinrise.service';
 import { Job } from '../types';
 
 export const scoreJobs = async (req: Request, res: Response) => {
@@ -21,19 +22,19 @@ export const scoreJobs = async (req: Request, res: Response) => {
 
 
         if (!jobs || !Array.isArray(jobs) || jobs.length === 0) {
+            // Try to get from updated cache key for JoinRise API
+            jobs = await redis.get<Job[]>('jobs_joinrise:page_1:limit_20');
+        }
 
+        if (!jobs || !Array.isArray(jobs) || jobs.length === 0) {
+            // Fallback to old cache keys for backward compatibility
             jobs = await redis.get<Job[]>('jobs_v2:default:default');
         }
 
         if (!jobs || !Array.isArray(jobs) || jobs.length === 0) {
-
-            jobs = await redis.get<Job[]>('jobs:default:default');
-        }
-
-        if (!jobs || !Array.isArray(jobs) || jobs.length === 0) {
-
-            console.log('No cached jobs found, fetching fresh jobs...');
-            jobs = await getJobs();
+            // Fetch fresh jobs from JoinRise API
+            console.log('No cached jobs found, fetching fresh jobs from JoinRise...');
+            jobs = await getJobs(1, 20); // Page 1, 20 jobs
         }
 
         if (!jobs || jobs.length === 0) {
@@ -60,7 +61,7 @@ export const scoreJobs = async (req: Request, res: Response) => {
         }
 
 
-        await redis.set(`scores:${userId}`, scoredJobs, { ex: 3600 }); 
+        await redis.set(`scores:${userId}`, scoredJobs, { ex: 3600 });
 
         res.json({ success: true, data: scoredJobs });
     } catch (error: any) {

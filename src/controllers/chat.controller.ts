@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { chatAssistant } from '../services/ai.service';
-import { getJobs } from '../services/jobApi.service';
+import { getJobs } from '../services/joinrise.service';
 
 export const chat = async (req: Request, res: Response) => {
     try {
@@ -11,7 +11,7 @@ export const chat = async (req: Request, res: Response) => {
         }
 
 
-        const jobs = await getJobs();
+        const jobs = await getJobs(1, 20); 
 
         const response = await chatAssistant(jobs, message);
 
