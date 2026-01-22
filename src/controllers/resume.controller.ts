@@ -3,45 +3,28 @@ import extractText from '../utils/extractText';
 import redis from '../services/redis.service';
 
 export const uploadResume = async (req: Request, res: Response) => {
-    try {
-        if (!req.file) {
-            console.warn('⚠️ Upload attempt with no file');
-            return res.status(400).json({ success: false, message: 'No file uploaded' });
-        }
+  try {
+    console.log("📥 Upload hit");
 
-        console.log(`📂 Processing file: ${req.file.originalname} (${req.file.mimetype})`);
-
-        const userId = req.body.userId || 'guest';
-        const text = await extractText(req.file.path, req.file.mimetype);
-
-        if (!text) {
-            throw new Error('Failed to extract text from file.');
-        }
-
-        console.log(`✅ Text extracted (${text.length} chars). Saving to Redis...`);
-
-        // Save resume text to Redis
-        const cached = await redis.set(`resume:${userId}`, text);
-
-        if (!cached) {
-            console.warn(`⚠️ Failed to cache resume for user: ${userId}. Redis might be down.`);
-            // You might want to return text back to client if redis failed, 
-            // so client can send it in next request, but for now just warn.
-        } else {
-            console.log(`✅ Resume cached for user: ${userId}`);
-        }
-
-        res.json({
-            success: true,
-            message: 'Resume uploaded and processed successfully',
-            data: {
-                fileName: req.file.originalname,
-                textPreview: text.substring(0, 100) + '...'
-            }
-        });
-
-    } catch (error: any) {
-        console.error('❌ Upload Error:', error);
-        res.status(500).json({ success: false, message: error.message || 'Internal Server Error' });
+    if (!req.file) {
+      console.log("❌ No file received");
+      return res.status(400).json({ success: false, message: "No file uploaded" });
     }
+
+    const userId = req.body.userId || "guest";
+    console.log("👤 User:", userId);
+    console.log("📄 File:", req.file.path);
+
+    const text = await extractText(req.file.path, req.file.mimetype);
+    console.log("🧠 Text extracted, length:", text.length);
+
+    await redis.set(`resume:${userId}`, text);
+    console.log("🟢 Resume saved to Redis:", `resume:${userId}`);
+
+    res.json({ success: true, message: "Resume uploaded and processed successfully" });
+
+  } catch (error: any) {
+    console.error("🔥 Upload resume failed:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
